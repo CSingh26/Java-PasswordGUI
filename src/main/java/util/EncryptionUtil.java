@@ -1,4 +1,6 @@
 package main.java.util;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -12,6 +14,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptionUtil {
 
@@ -30,6 +33,16 @@ public class EncryptionUtil {
         new SecureRandom().nextBytes(iv);
 
         return new IvParameterSpec(iv);
+    }
+
+    public static SecretKey loadKeyFromFile(String filePath) throws Exception {
+        byte[] decodedKey = Base64.getDecoder().decode(Files.readAllBytes(Paths.get(filePath)));
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+    }
+
+    public static IvParameterSpec loadIvFromFile(String filePath) throws Exception {
+        byte[] decodedIv = Base64.getDecoder().decode(Files.readAllBytes(Paths.get(filePath)));
+        return new IvParameterSpec(decodedIv);
     }
 
     public static String encrypt(String input, SecretKey key,
