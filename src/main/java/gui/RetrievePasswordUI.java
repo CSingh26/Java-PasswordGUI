@@ -1,11 +1,14 @@
 package main.java.gui;
 
-import java.util.List;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import main.dao.PasswordEntryDao;
 import main.java.model.PasswordEntry;
-import java.awt.*;
-import java.awt.event.*;
+
+import java.util.List;
 
 public class RetrievePasswordUI extends JFrame {
 
@@ -13,12 +16,11 @@ public class RetrievePasswordUI extends JFrame {
     private JTextField emailIdField;
     private JTextField userNameField;
     private JTextField passwordField;
-    private final String serviceNamePlaceHolder = "Enter Service Name";
-    private JButton generateDataButton;
-    private JButton nextEntryButton;
+    private JButton nextEntry;
+    private JButton getData;
     private JButton homePage;
     private List<PasswordEntry> entries;
-    private int currentIndex = 0;
+    private int curr = 0;
 
     public RetrievePasswordUI() {
         initializeUI();
@@ -26,101 +28,110 @@ public class RetrievePasswordUI extends JFrame {
 
     private void initializeUI() {
         setTitle("Retrieve Password");
-        setSize(700, 350); // Adjusted for consistency
+        setSize(550, 350);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        serviceNameField = new JTextField(serviceNamePlaceHolder, 20);
+        serviceNameField = new JTextField(20);
         emailIdField = new JTextField(20);
         userNameField = new JTextField(20);
         passwordField = new JTextField(20);
-        passwordField.setEditable(false); // Make the password field non-editable
-        serviceNameField.setForeground(Color.GRAY);
+        passwordField.setEditable(false);
 
-        generateDataButton = new JButton("Get Password");
-        nextEntryButton = new JButton("Next Entry");
+        getData = new JButton("Retrieve Password");
+        nextEntry = new JButton("Next Entry");
         homePage = new JButton("Back to Home");
-        nextEntryButton.setEnabled(false); // Initially disabled
+        nextEntry.setEnabled(false);
 
+        
+        gbc.gridx = 0; gbc.gridy = 0; 
         mainPanel.add(new JLabel("Service Name:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 0; 
         mainPanel.add(serviceNameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; 
         mainPanel.add(new JLabel("Email:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 1; 
         mainPanel.add(emailIdField, gbc);
-        mainPanel.add(new JLabel("UserName:"), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; 
+        mainPanel.add(new JLabel("Username"), gbc);
+        gbc.gridx = 1; gbc.gridy = 2; 
         mainPanel.add(userNameField, gbc);
-        mainPanel.add(new JLabel("Password:"), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3; 
+        mainPanel.add(new JLabel("Password"), gbc);
+        gbc.gridx = 1; gbc.gridy = 3; 
         mainPanel.add(passwordField, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.add(generateDataButton);
-        buttonPanel.add(nextEntryButton);
+        buttonPanel.add(getData);
+        buttonPanel.add(nextEntry);
         buttonPanel.add(homePage);
 
         setLayout(new BorderLayout());
         add(mainPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.PAGE_END);
 
-        setupListeners();
+        getData.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PasswordEntryDao dao = new PasswordEntryDao();
+                if (serviceNameField.getText().isEmpty() || serviceNameField.getText().isBlank()) {
+                    JOptionPane.showMessageDialog(RetrievePasswordUI.this, "Please enter service name");
+                } else {
+                    try {
+                        entries = dao.getEntry(serviceNameField.getText());
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                }
+
+                if (entries.isEmpty()) {
+                    JOptionPane.showMessageDialog(RetrievePasswordUI.this, "No enteries found with this service name.");
+                } else {
+                    if (entries.size() > 1) {
+                        nextEntry.setEnabled(true);
+                    } else {
+                        nextEntry.setEnabled(false);
+                    }
+                }
+
+                curr = 0;
+                displayNext();
+            }
+            
+        });
+
+        nextEntry.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                curr = (curr + 1) % entries.size();
+                displayNext();
+            }
+            
+        });
+
+        homePage.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose(); 
+                new MainWindow().setVisible(true); 
+            }
+        });
+
     }
 
-    private void setupListeners() {
-        serviceNameField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (serviceNameField.getText().equals(serviceNamePlaceHolder)) {
-                    serviceNameField.setText("");
-                    serviceNameField.setForeground(Color.BLACK);
-                }
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (serviceNameField.getText().isEmpty()) {
-                    serviceNameField.setText(serviceNamePlaceHolder);
-                    serviceNameField.setForeground(Color.GRAY);
-                }
-            }
-        });
-
-        generateDataButton.addActionListener(e -> {
-            PasswordEntryDao dao = new PasswordEntryDao();
-            try {
-                entries = dao.getEntry(serviceNameField.getText().equals(serviceNamePlaceHolder) ? "" : serviceNameField.getText());
-            } catch (Exception exe) {
-                exe.printStackTrace();
-            }
-            if (entries.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No entries found.");
-                nextEntryButton.setEnabled(false);
-            } else {
-                displayEntry();
-                nextEntryButton.setEnabled(entries.size() > 1);
-            }
-        });
-
-        nextEntryButton.addActionListener(e -> {
-            currentIndex = (currentIndex + 1) % entries.size();
-            displayEntry();
-        });
-
-        homePage.addActionListener(e -> {
-            dispose();
-            new MainWindow().setVisible(true);
-        });
-    }
-
-    private void displayEntry() {
-        if (entries.isEmpty() || currentIndex < 0 || currentIndex >= entries.size()) return;
-        PasswordEntry entry = entries.get(currentIndex);
+    private void displayNext() {
+        PasswordEntry entry = entries.get(curr);
         emailIdField.setText(entry.getEmailId());
         userNameField.setText(entry.getUserName());
-        passwordField.setText(entry.getPassword()); // Assuming the getPassword method returns the decrypted password
+        passwordField.setText(entry.getPassword());
     }
 
 }

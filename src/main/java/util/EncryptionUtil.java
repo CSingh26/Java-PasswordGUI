@@ -67,4 +67,20 @@ public class EncryptionUtil {
             return new String(plainText);
     }
 
+    public static void main(String[] args) throws Exception {
+    
+        String originalText = "Test message";
+        String encryptedText = EncryptionUtil.encrypt(originalText, 
+        loadKeyFromFile("/Users/chaitanyasingh/Documents/CollegeStuff/Project/5/encryptionKey.txt"), 
+        loadIvFromFile("/Users/chaitanyasingh/Documents/CollegeStuff/Project/5/encryptionIv.txt"));
+        String decryptedText = EncryptionUtil.decrypt(encryptedText, 
+        loadKeyFromFile("/Users/chaitanyasingh/Documents/CollegeStuff/Project/5/encryptionKey.txt"), 
+        loadIvFromFile("/Users/chaitanyasingh/Documents/CollegeStuff/Project/5/encryptionIv.txt"));
+    
+        System.out.println("Original: " + originalText);
+        System.out.println("Encrypted: " + encryptedText);
+        System.out.println("Decrypted: " + decryptedText);
+    }
+    
+
 }

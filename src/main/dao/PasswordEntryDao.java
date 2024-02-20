@@ -20,8 +20,8 @@ import main.java.util.EncryptionUtil;
 
 public class PasswordEntryDao {
 
-    String keyPath = "/Users/chaitanyasingh/Documents/CollegeStuff/Project/5/encryptionKey.txt";
-    String IvPath = "/Users/chaitanyasingh/Documents/CollegeStuff/Project/5/encryptionIv.txt";
+    String keyPath = "encryptionKey.txt";
+    String IvPath = "encryptionIv.txt";
     
     public void savePasswordEntry(PasswordEntry entry) throws 
         NoSuchPaddingException, NoSuchAlgorithmException,
